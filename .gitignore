@@ -1,0 +1,22 @@
+# Logs
+logs
+*.log
+
+# Dependency directories
+node_modules
+
+# Build output
+dist
+build
+
+# Environment variables
+.env
+package-lock.json
+
+# IDE and editor files
+.idea
+.vscode
+
+# Miscellaneous
+*.bak
+*.tmp
