@@ -22,6 +22,10 @@ app.use(express.static("public"));
 app.use(cookieParser());
 // app.use(require("./middlewares/log.middleware").logRequest);
 
+app.get("/", (req, res) => {
+  res.send("Welcome to the POS Backend!");
+});
+
 const AdminRouter = require("./routes/admin.route");
 const UserRouter = require("./routes/user.route");
 const TableRouter = require("./routes/table.route");

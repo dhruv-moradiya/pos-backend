@@ -2,7 +2,11 @@ const dotenv = require("dotenv");
 const connectDB = require("./db");
 const { app } = require("./app");
 
-dotenv.config({});
+const environment = process.env.NODE_ENV || "development";
+
+dotenv.config({
+  path: environment === "production" ? ".env.production" : ".env",
+});
 
 connectDB()
   .then(() => {
