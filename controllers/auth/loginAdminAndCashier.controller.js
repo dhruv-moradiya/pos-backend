@@ -46,6 +46,8 @@ module.exports = async (req, res) => {
     const { accessToken, refreshToken } =
       await generateAccessTokenAndRefreshToken(user._id, userType);
 
+    user.password = undefined;
+
     return res
       .status(200)
       .cookie("access_token", accessToken, { httpOnly: true, secure: true })
@@ -53,6 +55,7 @@ module.exports = async (req, res) => {
       .json({
         status: true,
         message: `${userType} logged in successfully`,
+        user,
         accessToken,
       });
   } catch (error) {
