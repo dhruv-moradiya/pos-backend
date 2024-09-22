@@ -5,6 +5,8 @@ const {
   getOrderById,
   updateQuantityAndDiscount,
   removeOrder,
+  getTodaysOrders,
+  cancelOrder,
 } = require("../controllers/order.controller");
 const verifyToken = require("../middlewares/auth.middleware");
 const { logRequest } = require("../middlewares/log.middleware");
@@ -30,5 +32,11 @@ router.patch(
 
 // DELETE ORDER
 router.delete("/:id", verifyToken, logRequest, removeOrder);
+
+router.get("/order-list/today", verifyToken, getTodaysOrders);
+
+router.delete("/remove/:id", verifyToken, logRequest, removeOrder);
+
+router.patch("/cancel/:id", verifyToken, logRequest, cancelOrder);
 
 logRequest, (module.exports = router);

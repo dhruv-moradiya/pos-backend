@@ -1,4 +1,5 @@
 const Order = require("../models/order.model");
+const Table = require("../models/table.model");
 const User = require("../models/user.model");
 const mongoose = require("mongoose");
 
@@ -9,7 +10,6 @@ const placeOrder = async (req, res) => {
       customer_id,
       tableId,
       items,
-      status,
       orderType,
       totalAmount,
       paymentStatus,
@@ -19,7 +19,6 @@ const placeOrder = async (req, res) => {
     if (!customer_id) missingFields.push("customer_id");
     if (!tableId) missingFields.push("tableId");
     if (!items || items.length === 0) missingFields.push("items");
-    if (!status) missingFields.push("status");
     if (!orderType) missingFields.push("orderType");
     if (!totalAmount) missingFields.push("totalAmount");
     if (!paymentStatus) missingFields.push("paymentStatus");
@@ -47,7 +46,6 @@ const placeOrder = async (req, res) => {
       customer_id,
       tableId,
       items,
-      status,
       orderType,
       totalAmount,
       paymentStatus,
@@ -273,10 +271,119 @@ const removeOrder = async (req, res) => {
   }
 };
 
+const getTodaysOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({
+      createdAt: { $gte: Date.now() - 24 * 60 * 60 * 1000 },
+    })
+      .populate({
+        path: "customer_info",
+        select: "_id name isOnline",
+      })
+      .populate({
+        path: "table_info",
+        select: "_id capacity",
+      })
+      .populate({
+        path: "items.dish",
+        select: "_id name price",
+      });
+
+    if (!orders) {
+      return res
+        .status(400)
+        .json({ status: false, message: "No orders found" });
+    }
+
+    const modifiedOrders = orders.map((order) => {
+      const orderObj = order.toObject();
+      delete orderObj.tableId;
+      delete orderObj.customer_id;
+      return orderObj;
+    });
+
+    return res.status(200).json({
+      status: true,
+      message: "Todays orders fetched successfully",
+      orders: modifiedOrders,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: false,
+      message: "Error while getting todays orders: " + error.message,
+    });
+  }
+};
+
+const cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Order ID is required" });
+    }
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res
+        .status(400)
+        .json({ status: false, message: "No order found with this id" });
+    }
+
+    if (order.status === "PENDING" || order.status === "HOLD") {
+      return res.status(400).json({
+        status: false,
+        message: `Cannot be cancelled order which is in "${order.status.toLowerCase()}" state`,
+      });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      { status: "CANCELED" },
+      { new: true }
+    );
+
+    const customer = await User.findById(order.customer_id);
+
+    if (customer) {
+      customer.isOnline = false;
+      customer.currentOrderId = null;
+      if (customer.totalPerson) {
+        delete customer.totalPerson;
+      }
+      await customer.save();
+    }
+
+    const table = await Table.findById(order.tableId);
+
+    if (table) {
+      table.isOccupied = false;
+      table.currentCustomerId = null;
+      await table.save();
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Order cancelled successfully",
+      updatedOrder,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: false,
+      message: "Error while canceling order: " + error.message,
+    });
+  }
+};
+
 module.exports = {
   placeOrder,
   getAllOrders,
   getOrderById,
   updateQuantityAndDiscount,
   removeOrder,
+  getTodaysOrders,
+  cancelOrder,
 };

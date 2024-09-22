@@ -32,9 +32,9 @@ const orderSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["PENDING", "COMPLETED", "CANCELED", "HOLD"],
+      enum: ["PLACED", "PENDING", "COMPLETED", "CANCELED", "HOLD"],
+      default: "PLACED",
       required: true,
-      default: "PENDING",
     },
     orderType: { type: String, enum: ["DINE-IN", "TAKEAWAY"], required: true },
     totalAmount: { type: Number, required: true },
@@ -42,6 +42,11 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+orderSchema.pre("save", async function (next) {
+  this.tax = this.totalAmount * 0.18;
+  next();
+});
 
 orderSchema.virtual("customer_info", {
   ref: "User",

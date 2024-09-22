@@ -46,7 +46,7 @@ const getAllTables = async (_, res) => {
       populate: {
         path: "orderHistory",
         match: {
-          status: { $in: ["PENDING", "HOLD"] },
+          status: { $in: ["PENDING", "HOLD", "PLACED"] },
         },
         options: { sort: { createdAt: -1 } },
         populate: {
