@@ -31,11 +31,13 @@ const UserRouter = require("./routes/user.route");
 const TableRouter = require("./routes/table.route");
 const DishRouter = require("./routes/dish.route");
 const OrderRouter = require("./routes/order.route");
+const GeneratePDF = require("./controllers/pdf/generatePDF");
 
 app.use("/api/v1/admin", AdminRouter);
 app.use("/api/v1/user", UserRouter);
 app.use("/api/v1/table", TableRouter);
 app.use("/api/v1/dish", DishRouter);
 app.use("/api/v1/order", OrderRouter);
+app.use("/api/v1/generate-pdf", GeneratePDF);
 
 module.exports = { app };

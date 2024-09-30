@@ -78,8 +78,12 @@ const placeOrder = async (req, res) => {
 
 // GET ALL ORDERS
 const getAllOrders = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+
   try {
-    const orders = await Order.find()
+    const orders = await Order.find({
+      // createdAt: { $gte: Date.now() - 24 * 60 * 60 * 1000 },
+    })
       .populate({
         path: "customer_info",
         select: "_id name isOnline",
@@ -91,7 +95,10 @@ const getAllOrders = async (req, res) => {
       .populate({
         path: "items.dish",
         select: "_id name price",
-      });
+      })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     if (!orders) {
       return res
@@ -350,7 +357,7 @@ const cancelOrder = async (req, res) => {
 
     if (customer) {
       customer.isOnline = false;
-      customer.currentOrderId = null;
+      customer.currentTableId = null;
       if (customer.totalPerson) {
         delete customer.totalPerson;
       }
